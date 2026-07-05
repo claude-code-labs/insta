@@ -181,3 +181,34 @@ body {
     height: 220px;
   }
 }
+
+.media-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+}
+
+.media-thumb-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gridline);
+  color: var(--text-muted);
+}
+
+.plan-block {
+  background: var(--page-plane);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.7rem 0.9rem;
+}
+
+.progress {
+  background-color: var(--gridline);
+}
+
+.progress-bar {
+  background-color: var(--series-1);
+}

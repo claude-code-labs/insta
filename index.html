@@ -110,11 +110,12 @@
           <table class="table table-sm align-middle mb-0" id="media-table">
             <thead>
               <tr>
+                <th scope="col"></th>
                 <th scope="col">Date</th>
                 <th scope="col">Type</th>
                 <th scope="col">Légende</th>
-                <th scope="col" class="text-end">Likes</th>
-                <th scope="col" class="text-end">Commentaires</th>
+                <th scope="col" class="text-end"><i class="bi bi-heart-fill"></i></th>
+                <th scope="col" class="text-end"><i class="bi bi-chat-fill"></i></th>
                 <th scope="col" class="text-end">Engagement</th>
                 <th scope="col"></th>
               </tr>
@@ -128,13 +129,28 @@
         <div class="col-12 col-lg-6">
           <section class="chart-card h-100">
             <div class="d-flex align-items-center justify-content-between mb-2">
-              <h2 class="h6 mb-0"><i class="bi bi-calendar2-event-fill me-1"></i>Publications planifiées</h2>
+              <h2 class="h6 mb-0"><i class="bi bi-calendar2-event-fill me-1"></i>Planification automatique</h2>
             </div>
-            <div id="schedule-empty" class="text-muted small d-none">
-              Aucune publication planifiée. Dépose une image dans <code>schedule/media/</code> et
-              ajoute une entrée dans <code>schedule/queue.json</code>.
+            <div id="plan-empty" class="text-muted small d-none">
+              Le plan de publication apparaîtra après la première exécution de l'automatisation.
             </div>
-            <ul class="list-unstyled schedule-list" id="schedule-list"></ul>
+            <div id="plan-content" class="d-none">
+              <div class="plan-progress mb-3">
+                <div class="d-flex justify-content-between small text-muted mb-1">
+                  <span id="plan-progress-label"></span>
+                  <span id="plan-progress-pct"></span>
+                </div>
+                <div class="progress" style="height: 8px;">
+                  <div class="progress-bar" id="plan-progress-bar" role="progressbar"></div>
+                </div>
+              </div>
+              <div class="plan-block mb-3" id="plan-last"></div>
+              <div class="plan-block mb-3" id="plan-next"></div>
+              <div>
+                <div class="text-muted small mb-1">À venir</div>
+                <ul class="list-unstyled schedule-list" id="plan-upcoming"></ul>
+              </div>
+            </div>
           </section>
         </div>
         <div class="col-12 col-lg-6">

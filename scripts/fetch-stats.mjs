@@ -52,7 +52,7 @@ async function fetchInsights() {
 
 async function fetchRecentMedia(limit = 12) {
   const data = await graphGet(`${INSTAGRAM_ACCOUNT_ID}/media`, {
-    fields: "id,caption,media_type,media_url,permalink,timestamp,like_count,comments_count",
+    fields: "id,caption,media_type,media_url,thumbnail_url,permalink,timestamp,like_count,comments_count",
     limit: String(limit),
   });
   return data.data ?? [];
@@ -70,6 +70,7 @@ async function main() {
     type: m.media_type,
     timestamp: m.timestamp,
     permalink: m.permalink,
+    thumbnail: m.media_type === "VIDEO" ? m.thumbnail_url ?? null : m.media_url ?? null,
     caption: (m.caption ?? "").slice(0, 120),
     likes: m.like_count ?? 0,
     comments: m.comments_count ?? 0,

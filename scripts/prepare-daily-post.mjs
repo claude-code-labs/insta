@@ -8,27 +8,52 @@ import { hashtagsForPilier, developmentForPilier } from "./caption-content.mjs";
 const EXCEL_PATH = path.join(process.cwd(), "texte.xlsx");
 const STATE_PATH = path.join(process.cwd(), "data", "content-state.json");
 const PENDING_PATH = path.join(process.cwd(), "data", ".pending-post.json");
+const PLAN_PATH = path.join(process.cwd(), "data", "content-plan.json");
 const GITHUB_OUTPUT = process.env.GITHUB_OUTPUT;
 
-function parisSlot(now) {
-  const parts = new Intl.DateTimeFormat("fr-FR", {
-    timeZone: "Europe/Paris",
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  }).formatToParts(now);
-  const hour = Number(parts.find((p) => p.type === "hour").value);
-  const minute = Number(parts.find((p) => p.type === "minute").value);
-  const dateKey = new Intl.DateTimeFormat("en-CA", {
+const SLOT_HOURS = { midi: 12, soir: 19 };
+
+function parisPartsOf(date) {
+  const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: "Europe/Paris",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).format(now);
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(date);
+  const get = (type) => Number(parts.find((p) => p.type === type).value);
+  return { y: get("year"), mo: get("month"), d: get("day"), h: get("hour"), mi: get("minute") };
+}
 
-  if (hour === 12 && minute < 15) return { slot: "midi", dateKey };
-  if (hour === 18 && minute < 15) return { slot: "soir", dateKey };
+function parisInstant(y, mo, d, h, mi) {
+  let guess = Date.UTC(y, mo - 1, d, h, mi, 0);
+  for (let i = 0; i < 3; i++) {
+    const parts = parisPartsOf(new Date(guess));
+    const guessedUTC = Date.UTC(parts.y, parts.mo - 1, parts.d, parts.h, parts.mi, 0);
+    const target = Date.UTC(y, mo - 1, d, h, mi, 0);
+    guess += target - guessedUTC;
+  }
+  return new Date(guess);
+}
+
+function parisSlot(now) {
+  const { y, mo, d, h, mi } = parisPartsOf(now);
+  const dateKey = `${y}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  if (h === SLOT_HOURS.midi && mi < 15) return { slot: "midi", dateKey };
+  if (h === SLOT_HOURS.soir && mi < 15) return { slot: "soir", dateKey };
   return null;
+}
+
+function nextSlotAt(now) {
+  const { y, mo, d } = parisPartsOf(now);
+  const todayMidi = parisInstant(y, mo, d, SLOT_HOURS.midi, 0);
+  const todaySoir = parisInstant(y, mo, d, SLOT_HOURS.soir, 0);
+  const tomorrow = new Date(Date.UTC(y, mo - 1, d + 1));
+  const tParts = parisPartsOf(tomorrow);
+  const tomorrowMidi = parisInstant(tParts.y, tParts.mo, tParts.d, SLOT_HOURS.midi, 0);
+  return [todayMidi, todaySoir, tomorrowMidi].find((dt) => dt.getTime() > now.getTime());
 }
 
 async function loadState() {
@@ -45,27 +70,58 @@ function setOutput(name, value) {
   }
 }
 
+async function writePlan(now, state, rows) {
+  const upcoming = rows.slice(state.next_row_index, state.next_row_index + 4).map((r) => ({
+    jour: r["Jour"],
+    pilier: String(r["Pilier"] ?? "").trim(),
+    phrase: String(r["Phrase principale"] ?? "").trim(),
+  }));
+
+  const plan = {
+    generated_at: now.toISOString(),
+    total_days: rows.length,
+    posted_count: state.next_row_index,
+    remaining: Math.max(rows.length - state.next_row_index, 0),
+    last_posted:
+      state.last_jour_posted != null
+        ? {
+            jour: state.last_jour_posted,
+            permalink: state.last_permalink ?? null,
+            posted_at: state.last_posted_at ?? null,
+          }
+        : null,
+    next_slot_at: nextSlotAt(now)?.toISOString() ?? null,
+    upcoming,
+  };
+
+  await mkdir(path.dirname(PLAN_PATH), { recursive: true });
+  await writeFile(PLAN_PATH, JSON.stringify(plan, null, 2));
+}
+
 async function main() {
+  const now = new Date();
   const forced = process.env.FORCE_POST === "true";
-  const slotInfo = parisSlot(new Date());
+  const slotInfo = parisSlot(now);
+
+  const state = await loadState();
+  const workbook = XLSX.read(readFileSync(EXCEL_PATH), { type: "buffer" });
+  const sheet = workbook.Sheets["Contenus 200 jours"];
+  const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+
+  await writePlan(now, state, rows);
 
   if (!forced && !slotInfo) {
-    console.log("Hors créneau (12h ou 18h heure de Paris). Rien à faire.");
+    console.log("Hors créneau (12h ou 19h heure de Paris). Rien à faire.");
     await setOutput("due", "false");
     return;
   }
 
-  const state = await loadState();
   const slotKey = forced ? `force_${Date.now()}` : `${slotInfo.dateKey}_${slotInfo.slot}`;
   if (!forced && state.last_posted_slot_key === slotKey) {
     console.log(`Créneau ${slotKey} déjà traité.`);
     await setOutput("due", "false");
     return;
   }
-
-  const workbook = XLSX.read(readFileSync(EXCEL_PATH), { type: "buffer" });
-  const sheet = workbook.Sheets["Contenus 200 jours"];
-  const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
   const row = rows[state.next_row_index];
   if (!row) {
