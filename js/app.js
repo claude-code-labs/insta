@@ -10,10 +10,33 @@ function formatDate(iso) {
   return new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "short" });
 }
 
+function formatDateTime(iso) {
+  return new Date(iso).toLocaleString("fr-FR", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str ?? "";
+  return div.innerHTML;
+}
+
+async function loadJson(pathName, fallback) {
+  try {
+    const res = await fetch(pathName, { cache: "no-store" });
+    if (!res.ok) return fallback;
+    return await res.json();
+  } catch {
+    return fallback;
+  }
+}
+
 async function loadHistory() {
-  const res = await fetch("data/history.json", { cache: "no-store" });
-  if (!res.ok) return [];
-  return res.json();
+  return loadJson("data/history.json", []);
 }
 
 function renderStats(latest, previous) {
@@ -21,9 +44,8 @@ function renderStats(latest, previous) {
   document.getElementById("account-username").textContent = latest.account.username
     ? `@${latest.account.username}`
     : "";
-  document.getElementById("last-update").textContent = `Mis à jour le ${new Date(
-    latest.fetched_at
-  ).toLocaleString("fr-FR")}`;
+  document.getElementById("last-update").innerHTML =
+    `<i class="bi bi-arrow-repeat"></i> Mis à jour le ${new Date(latest.fetched_at).toLocaleString("fr-FR")}`;
 
   document.getElementById("stat-followers").textContent = formatNumber(latest.account.followers_count);
   document.getElementById("stat-media").textContent = formatNumber(latest.account.media_count);
@@ -143,14 +165,70 @@ function renderTable(media) {
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td>${formatDate(m.timestamp)}</td>
-      <td>${m.type ?? ""}</td>
-      <td class="text-truncate" style="max-width: 220px;">${m.caption ?? ""}</td>
+      <td>${escapeHtml(m.type)}</td>
+      <td class="text-truncate" style="max-width: 220px;">${escapeHtml(m.caption)}</td>
       <td class="text-end">${formatNumber(m.likes)}</td>
       <td class="text-end">${formatNumber(m.comments)}</td>
       <td class="text-end">${m.engagement_rate}%</td>
-      <td><a href="${m.permalink}" target="_blank" rel="noopener">Voir</a></td>
+      <td><a href="${encodeURI(m.permalink ?? "#")}" target="_blank" rel="noopener">Voir</a></td>
     `;
     tbody.appendChild(tr);
+  }
+}
+
+const STATUS_LABELS = {
+  pending: { icon: "bi-hourglass-split", label: "Planifiée" },
+  published: { icon: "bi-check-circle-fill", label: "Publiée" },
+  failed: { icon: "bi-x-circle-fill", label: "Échec" },
+};
+
+function renderSchedule(queue) {
+  const list = document.getElementById("schedule-list");
+  const emptyEl = document.getElementById("schedule-empty");
+  list.innerHTML = "";
+
+  if (!queue.length) {
+    emptyEl.classList.remove("d-none");
+    return;
+  }
+  emptyEl.classList.add("d-none");
+
+  const sorted = [...queue].sort((a, b) => (a.scheduled_for < b.scheduled_for ? 1 : -1));
+  for (const entry of sorted) {
+    const status = STATUS_LABELS[entry.status] ?? STATUS_LABELS.pending;
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <div class="d-flex justify-content-between align-items-start gap-2">
+        <div>
+          <div class="schedule-caption text-truncate" style="max-width: 320px;">${escapeHtml(entry.caption)}</div>
+          <small class="text-muted">${formatDateTime(entry.scheduled_for)}</small>
+        </div>
+        <span class="status-badge ${escapeHtml(entry.status)}"><i class="bi ${status.icon}"></i>${status.label}</span>
+      </div>
+    `;
+    list.appendChild(li);
+  }
+}
+
+function renderMessages(conversations) {
+  const list = document.getElementById("messages-list");
+  const emptyEl = document.getElementById("messages-empty");
+  list.innerHTML = "";
+
+  if (!conversations.length) {
+    emptyEl.classList.remove("d-none");
+    return;
+  }
+  emptyEl.classList.add("d-none");
+
+  for (const conv of conversations) {
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <div class="message-participant">${escapeHtml(conv.participant)}</div>
+      <div class="message-preview text-truncate" style="max-width: 320px;">${escapeHtml(conv.last_message?.text)}</div>
+      <small class="text-muted">${conv.updated_time ? formatDateTime(conv.updated_time) : ""}</small>
+    `;
+    list.appendChild(li);
   }
 }
 
@@ -171,6 +249,13 @@ async function init() {
   renderEngagementChart(latest.recent_media ?? []);
   renderLikesCommentsChart(latest.recent_media ?? []);
   renderTable(latest.recent_media ?? []);
+
+  const [queue, messages] = await Promise.all([
+    loadJson("schedule/queue.json", []),
+    loadJson("data/messages.json", { conversations: [] }),
+  ]);
+  renderSchedule(queue);
+  renderMessages(messages.conversations ?? []);
 }
 
 init();

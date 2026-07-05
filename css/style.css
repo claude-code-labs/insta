@@ -10,7 +10,13 @@
 
   --series-1: #2a78d6; /* blue */
   --series-2: #1baf7a; /* aqua */
-  --series-good: #0ca30c;
+
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-critical: #d03b3b;
+
+  --hero-from: #184f95;
+  --hero-to: #2a78d6;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -26,8 +32,14 @@
 
     --series-1: #3987e5;
     --series-2: #199e70;
-    --series-good: #0ca30c;
+
+    --hero-from: #0d366b;
+    --hero-to: #184f95;
   }
+}
+
+* {
+  box-sizing: border-box;
 }
 
 body {
@@ -36,24 +48,42 @@ body {
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 
-.app-header {
-  background: var(--surface-1);
-  border-bottom: 1px solid var(--border);
+.hero {
+  background: linear-gradient(135deg, var(--hero-from), var(--hero-to));
+}
+
+.hero-username,
+.hero-update {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.85rem;
 }
 
 .profile-pic {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.6);
 }
 
 .stat-tile {
   background: var(--surface-1);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1rem;
+  border-radius: 14px;
+  padding: 1.1rem;
   height: 100%;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.stat-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(11, 11, 11, 0.08);
+}
+
+.stat-icon {
+  color: var(--series-1);
+  font-size: 1.1rem;
+  margin-bottom: 0.35rem;
 }
 
 .stat-label {
@@ -73,14 +103,14 @@ body {
 }
 
 .stat-delta.positive {
-  color: var(--series-good);
+  color: var(--status-good);
 }
 
 .chart-card {
   background: var(--surface-1);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1rem;
+  border-radius: 14px;
+  padding: 1.1rem;
 }
 
 .chart-wrap {
@@ -93,9 +123,57 @@ body {
   border-color: var(--gridline);
 }
 
-caption,
 .text-muted {
   color: var(--text-muted) !important;
+}
+
+/* Status badges: icon + label, never color alone */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+}
+
+.status-badge.pending {
+  color: var(--status-warning);
+}
+
+.status-badge.published {
+  color: var(--status-good);
+}
+
+.status-badge.failed {
+  color: var(--status-critical);
+}
+
+.schedule-list li,
+.messages-list li {
+  border-bottom: 1px solid var(--gridline);
+  padding: 0.6rem 0;
+}
+
+.schedule-list li:last-child,
+.messages-list li:last-child {
+  border-bottom: none;
+}
+
+.schedule-caption {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.message-preview {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.message-participant {
+  font-weight: 600;
 }
 
 @media (max-width: 575.98px) {

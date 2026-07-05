@@ -8,20 +8,26 @@
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
     rel="stylesheet"
   />
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    rel="stylesheet"
+  />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <header class="app-header">
+  <header class="hero">
     <div class="container">
-      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 py-3">
-        <div class="d-flex align-items-center gap-2">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 py-4">
+        <div class="d-flex align-items-center gap-3">
           <img id="profile-pic" src="" alt="" class="profile-pic d-none" />
           <div>
-            <h1 class="h5 mb-0" id="account-name">Dashboard Instagram</h1>
-            <small class="text-muted" id="account-username">&nbsp;</small>
+            <h1 class="h4 mb-0 text-white" id="account-name">Dashboard Instagram</h1>
+            <span class="hero-username" id="account-username">&nbsp;</span>
           </div>
         </div>
-        <small class="text-muted" id="last-update">Chargement…</small>
+        <span class="hero-update" id="last-update">
+          <i class="bi bi-arrow-repeat"></i> Chargement…
+        </span>
       </div>
     </div>
   </header>
@@ -37,6 +43,7 @@
       <section class="row g-3 mb-4">
         <div class="col-6 col-md-3">
           <div class="stat-tile">
+            <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
             <div class="stat-label">Abonnés</div>
             <div class="stat-value" id="stat-followers">–</div>
             <div class="stat-delta" id="stat-followers-delta"></div>
@@ -44,18 +51,21 @@
         </div>
         <div class="col-6 col-md-3">
           <div class="stat-tile">
+            <div class="stat-icon"><i class="bi bi-grid-3x3-gap-fill"></i></div>
             <div class="stat-label">Publications</div>
             <div class="stat-value" id="stat-media">–</div>
           </div>
         </div>
         <div class="col-6 col-md-3">
           <div class="stat-tile">
-            <div class="stat-label">Portée (reach, 24h)</div>
+            <div class="stat-icon"><i class="bi bi-broadcast"></i></div>
+            <div class="stat-label">Portée (24h)</div>
             <div class="stat-value" id="stat-reach">–</div>
           </div>
         </div>
         <div class="col-6 col-md-3">
           <div class="stat-tile">
+            <div class="stat-icon"><i class="bi bi-eye-fill"></i></div>
             <div class="stat-label">Vues de profil (24h)</div>
             <div class="stat-value" id="stat-profile-views">–</div>
           </div>
@@ -65,7 +75,7 @@
       <!-- Followers growth -->
       <section class="chart-card mb-4">
         <div class="d-flex align-items-center justify-content-between mb-2">
-          <h2 class="h6 mb-0">Évolution des abonnés</h2>
+          <h2 class="h6 mb-0"><i class="bi bi-graph-up-arrow me-1"></i>Évolution des abonnés</h2>
         </div>
         <div class="chart-wrap">
           <canvas id="chart-followers" role="img" aria-label="Courbe d'évolution du nombre d'abonnés dans le temps"></canvas>
@@ -75,7 +85,7 @@
       <div class="row g-3 mb-4">
         <div class="col-12 col-lg-6">
           <section class="chart-card h-100">
-            <h2 class="h6 mb-2">Engagement des dernières publications</h2>
+            <h2 class="h6 mb-2"><i class="bi bi-bar-chart-fill me-1"></i>Engagement des dernières publications</h2>
             <div class="chart-wrap">
               <canvas id="chart-engagement" role="img" aria-label="Barres du taux d'engagement par publication récente"></canvas>
             </div>
@@ -83,7 +93,7 @@
         </div>
         <div class="col-12 col-lg-6">
           <section class="chart-card h-100">
-            <h2 class="h6 mb-2">Likes vs commentaires</h2>
+            <h2 class="h6 mb-2"><i class="bi bi-heart-fill me-1"></i>Likes vs commentaires</h2>
             <div class="chart-wrap">
               <canvas id="chart-likes-comments" role="img" aria-label="Barres comparant likes et commentaires par publication récente"></canvas>
             </div>
@@ -92,9 +102,9 @@
       </div>
 
       <!-- Table view (accessibility) -->
-      <section class="chart-card">
+      <section class="chart-card mb-4">
         <div class="d-flex align-items-center justify-content-between mb-2">
-          <h2 class="h6 mb-0">Détail des publications récentes</h2>
+          <h2 class="h6 mb-0"><i class="bi bi-table me-1"></i>Détail des publications récentes</h2>
         </div>
         <div class="table-responsive">
           <table class="table table-sm align-middle mb-0" id="media-table">
@@ -113,6 +123,32 @@
           </table>
         </div>
       </section>
+
+      <div class="row g-3">
+        <div class="col-12 col-lg-6">
+          <section class="chart-card h-100">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <h2 class="h6 mb-0"><i class="bi bi-calendar2-event-fill me-1"></i>Publications planifiées</h2>
+            </div>
+            <div id="schedule-empty" class="text-muted small d-none">
+              Aucune publication planifiée. Dépose une image dans <code>schedule/media/</code> et
+              ajoute une entrée dans <code>schedule/queue.json</code>.
+            </div>
+            <ul class="list-unstyled schedule-list" id="schedule-list"></ul>
+          </section>
+        </div>
+        <div class="col-12 col-lg-6">
+          <section class="chart-card h-100">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+              <h2 class="h6 mb-0"><i class="bi bi-chat-dots-fill me-1"></i>Messages récents</h2>
+            </div>
+            <div id="messages-empty" class="text-muted small d-none">
+              Aucun message ou fonctionnalité pas encore activée sur le token.
+            </div>
+            <ul class="list-unstyled messages-list" id="messages-list"></ul>
+          </section>
+        </div>
+      </div>
     </div>
   </main>
 

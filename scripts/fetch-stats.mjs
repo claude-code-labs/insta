@@ -1,8 +1,6 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
-
-const GRAPH_VERSION = "v21.0";
-const GRAPH_BASE = `https://graph.facebook.com/${GRAPH_VERSION}`;
+import { createGraphClient } from "./graph-client.mjs";
 
 const {
   INSTAGRAM_ACCESS_TOKEN,
@@ -14,19 +12,7 @@ if (!INSTAGRAM_ACCESS_TOKEN || !INSTAGRAM_ACCOUNT_ID) {
   process.exit(1);
 }
 
-async function graphGet(pathSegment, params = {}) {
-  const url = new URL(`${GRAPH_BASE}/${pathSegment}`);
-  url.searchParams.set("access_token", INSTAGRAM_ACCESS_TOKEN);
-  for (const [key, value] of Object.entries(params)) {
-    url.searchParams.set(key, value);
-  }
-  const res = await fetch(url);
-  const body = await res.json();
-  if (!res.ok) {
-    throw new Error(`Graph API error on ${pathSegment}: ${JSON.stringify(body)}`);
-  }
-  return body;
-}
+const { graphGet } = createGraphClient(INSTAGRAM_ACCESS_TOKEN);
 
 async function fetchAccountInfo() {
   return graphGet(INSTAGRAM_ACCOUNT_ID, {
