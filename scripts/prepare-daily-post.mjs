@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import * as XLSX from "xlsx";
 import { renderHookImage } from "./render-hook-image.mjs";
-import { hashtagsForPilier } from "./hashtag-pool.mjs";
+import { hashtagsForPilier, developmentForPilier } from "./caption-content.mjs";
 
 const EXCEL_PATH = path.join(process.cwd(), "texte.xlsx");
 const STATE_PATH = path.join(process.cwd(), "data", "content-state.json");
@@ -80,8 +80,14 @@ async function main() {
   const pilier = String(row["Pilier"] ?? "").trim();
   const jour = row["Jour"];
 
+  const rowIndexWithinPilier = rows
+    .slice(0, state.next_row_index)
+    .filter((r) => String(r["Pilier"] ?? "").trim() === pilier).length;
+  const development = developmentForPilier(pilier, rowIndexWithinPilier);
   const hashtags = hashtagsForPilier(pilier);
-  const caption = [phrasePrincipale, cta, hashtags.join(" ")].filter(Boolean).join("\n\n");
+  const caption = [phrasePrincipale, development, cta, hashtags.join(" ")]
+    .filter(Boolean)
+    .join("\n\n");
 
   const imageBuffer = await renderHookImage(hookCourt || phrasePrincipale);
   const mediaDir = path.join(process.cwd(), "schedule", "media", "generated");
