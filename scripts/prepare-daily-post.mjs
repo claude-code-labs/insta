@@ -46,16 +46,18 @@ function setOutput(name, value) {
 }
 
 async function main() {
+  const forced = process.env.FORCE_POST === "true";
   const slotInfo = parisSlot(new Date());
-  if (!slotInfo) {
+
+  if (!forced && !slotInfo) {
     console.log("Hors créneau (12h ou 18h heure de Paris). Rien à faire.");
     await setOutput("due", "false");
     return;
   }
 
   const state = await loadState();
-  const slotKey = `${slotInfo.dateKey}_${slotInfo.slot}`;
-  if (state.last_posted_slot_key === slotKey) {
+  const slotKey = forced ? `force_${Date.now()}` : `${slotInfo.dateKey}_${slotInfo.slot}`;
+  if (!forced && state.last_posted_slot_key === slotKey) {
     console.log(`Créneau ${slotKey} déjà traité.`);
     await setOutput("due", "false");
     return;
