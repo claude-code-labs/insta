@@ -106,7 +106,7 @@ async function main() {
     )
   );
 
-  console.log(`Post préparé pour le jour ${jour} (${pilier}) — créneau ${slotInfo.slot}.`);
+  console.log(`Post préparé pour le jour ${jour} (${pilier}) — créneau ${slotInfo?.slot ?? "forcé"}.`);
   await setOutput("due", "true");
 }
 
