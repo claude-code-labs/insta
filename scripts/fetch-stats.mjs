@@ -34,29 +34,34 @@ async function fetchAccountInfo() {
   });
 }
 
-async function fetchInsights() {
-  // Certaines metrics changent de nom / disparaissent selon les versions d'API :
-  // on essaie plusieurs jeux et on garde ce qui fonctionne, sans faire planter le run.
-  const metricSets = [
-    "reach,profile_views,accounts_engaged,total_interactions",
-    "reach,profile_views",
-  ];
-  for (const metric of metricSets) {
-    try {
-      const data = await graphGet(`${INSTAGRAM_ACCOUNT_ID}/insights`, {
-        metric,
-        period: "day",
-      });
-      const values = {};
-      for (const entry of data.data ?? []) {
-        values[entry.name] = entry.values?.at(-1)?.value ?? null;
-      }
-      return values;
-    } catch (err) {
-      console.warn(`Insights indisponibles pour "${metric}": ${err.message}`);
+async function fetchMetricGroup(metric, extraParams = {}) {
+  try {
+    const data = await graphGet(`${INSTAGRAM_ACCOUNT_ID}/insights`, {
+      metric,
+      period: "day",
+      ...extraParams,
+    });
+    const values = {};
+    for (const entry of data.data ?? []) {
+      values[entry.name] = entry.values?.at(-1)?.value ?? entry.total_value?.value ?? null;
     }
+    return values;
+  } catch (err) {
+    console.warn(`Insights indisponibles pour "${metric}": ${err.message}`);
+    return {};
   }
-  return {};
+}
+
+async function fetchInsights() {
+  // "reach" est une metric time-series classique ; profile_views/accounts_engaged/
+  // total_interactions exigent metric_type=total_value depuis la mise à jour de l'API.
+  const [timeSeries, totalValue] = await Promise.all([
+    fetchMetricGroup("reach"),
+    fetchMetricGroup("profile_views,accounts_engaged,total_interactions", {
+      metric_type: "total_value",
+    }),
+  ]);
+  return { ...timeSeries, ...totalValue };
 }
 
 async function fetchRecentMedia(limit = 12) {
