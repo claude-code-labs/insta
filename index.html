@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dashboard Instagram</title>
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="container">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 py-3">
+        <div class="d-flex align-items-center gap-2">
+          <img id="profile-pic" src="" alt="" class="profile-pic d-none" />
+          <div>
+            <h1 class="h5 mb-0" id="account-name">Dashboard Instagram</h1>
+            <small class="text-muted" id="account-username">&nbsp;</small>
+          </div>
+        </div>
+        <small class="text-muted" id="last-update">Chargement…</small>
+      </div>
+    </div>
+  </header>
+
+  <main class="container py-4">
+    <div id="empty-state" class="alert alert-warning d-none" role="alert">
+      Aucune donnée disponible pour le moment. Le premier rapport apparaîtra après la
+      prochaine exécution automatique (ou lance le workflow manuellement).
+    </div>
+
+    <div id="dashboard" class="d-none">
+      <!-- Stat tiles -->
+      <section class="row g-3 mb-4">
+        <div class="col-6 col-md-3">
+          <div class="stat-tile">
+            <div class="stat-label">Abonnés</div>
+            <div class="stat-value" id="stat-followers">–</div>
+            <div class="stat-delta" id="stat-followers-delta"></div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-tile">
+            <div class="stat-label">Publications</div>
+            <div class="stat-value" id="stat-media">–</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-tile">
+            <div class="stat-label">Portée (reach, 24h)</div>
+            <div class="stat-value" id="stat-reach">–</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-tile">
+            <div class="stat-label">Vues de profil (24h)</div>
+            <div class="stat-value" id="stat-profile-views">–</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Followers growth -->
+      <section class="chart-card mb-4">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <h2 class="h6 mb-0">Évolution des abonnés</h2>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="chart-followers" role="img" aria-label="Courbe d'évolution du nombre d'abonnés dans le temps"></canvas>
+        </div>
+      </section>
+
+      <div class="row g-3 mb-4">
+        <div class="col-12 col-lg-6">
+          <section class="chart-card h-100">
+            <h2 class="h6 mb-2">Engagement des dernières publications</h2>
+            <div class="chart-wrap">
+              <canvas id="chart-engagement" role="img" aria-label="Barres du taux d'engagement par publication récente"></canvas>
+            </div>
+          </section>
+        </div>
+        <div class="col-12 col-lg-6">
+          <section class="chart-card h-100">
+            <h2 class="h6 mb-2">Likes vs commentaires</h2>
+            <div class="chart-wrap">
+              <canvas id="chart-likes-comments" role="img" aria-label="Barres comparant likes et commentaires par publication récente"></canvas>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- Table view (accessibility) -->
+      <section class="chart-card">
+        <div class="d-flex align-items-center justify-content-between mb-2">
+          <h2 class="h6 mb-0">Détail des publications récentes</h2>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-sm align-middle mb-0" id="media-table">
+            <thead>
+              <tr>
+                <th scope="col">Date</th>
+                <th scope="col">Type</th>
+                <th scope="col">Légende</th>
+                <th scope="col" class="text-end">Likes</th>
+                <th scope="col" class="text-end">Commentaires</th>
+                <th scope="col" class="text-end">Engagement</th>
+                <th scope="col"></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

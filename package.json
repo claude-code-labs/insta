@@ -1,0 +1,9 @@
+{
+  "name": "insta-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "fetch-stats": "node scripts/fetch-stats.mjs"
+  }
+}

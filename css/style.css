@@ -1,0 +1,105 @@
+:root {
+  --surface-1: #fcfcfb;
+  --page-plane: #f9f9f7;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted: #898781;
+  --gridline: #e1e0d9;
+  --baseline: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.1);
+
+  --series-1: #2a78d6; /* blue */
+  --series-2: #1baf7a; /* aqua */
+  --series-good: #0ca30c;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface-1: #1a1a19;
+    --page-plane: #0d0d0d;
+    --text-primary: #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted: #898781;
+    --gridline: #2c2c2a;
+    --baseline: #383835;
+    --border: rgba(255, 255, 255, 0.1);
+
+    --series-1: #3987e5;
+    --series-2: #199e70;
+    --series-good: #0ca30c;
+  }
+}
+
+body {
+  background: var(--page-plane);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.app-header {
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--border);
+}
+
+.profile-pic {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.stat-tile {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  height: 100%;
+}
+
+.stat-label {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+}
+
+.stat-value {
+  font-size: clamp(1.4rem, 4vw, 1.9rem);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.stat-delta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.stat-delta.positive {
+  color: var(--series-good);
+}
+
+.chart-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.chart-wrap {
+  position: relative;
+  height: 260px;
+}
+
+.table > :not(caption) > * > * {
+  color: var(--text-primary);
+  border-color: var(--gridline);
+}
+
+caption,
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+@media (max-width: 575.98px) {
+  .chart-wrap {
+    height: 220px;
+  }
+}
