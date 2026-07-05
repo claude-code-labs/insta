@@ -1,0 +1,32 @@
+name: Refresh Instagram access token
+
+on:
+  schedule:
+    # Chaque lundi à 03h00 UTC — bien avant l'expiration des 60 jours
+    - cron: "0 3 * * 1"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Rafraîchit le token et met à jour le secret
+        env:
+          FB_APP_ID: ${{ secrets.FB_APP_ID }}
+          FB_APP_SECRET: ${{ secrets.FB_APP_SECRET }}
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          NEW_TOKEN=$(node scripts/refresh-token.mjs)
+          echo "::add-mask::$NEW_TOKEN"
+          gh secret set INSTAGRAM_ACCESS_TOKEN --repo "$GITHUB_REPOSITORY" --body "$NEW_TOKEN"
+          echo "Token Instagram rafraîchi et secret mis à jour."

@@ -13,6 +13,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: instagram-repo-writes
+  cancel-in-progress: false
+
 jobs:
   post:
     runs-on: ubuntu-latest
@@ -37,7 +41,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/content-plan.json
-          git diff --cached --quiet || (git commit -m "chore(content): mise à jour du plan de publication" && git push)
+          git diff --cached --quiet || (git commit -m "chore(content): mise à jour du plan de publication" && git pull --rebase --autostash origin main && git push)
 
       - name: Commit et push l'image générée
         if: steps.prepare.outputs.due == 'true'
@@ -46,6 +50,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add schedule/media/generated data/.pending-post.json
           git commit -m "chore(content): image générée pour publication"
+          git pull --rebase --autostash origin main
           git push
 
       - name: Publie sur Instagram
@@ -62,4 +67,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/content-state.json data/.pending-post.json
           git commit -m "chore(content): mise à jour état de publication"
+          git pull --rebase --autostash origin main
           git push
