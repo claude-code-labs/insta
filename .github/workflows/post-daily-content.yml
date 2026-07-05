@@ -30,6 +30,12 @@ jobs:
       - name: Installe les dépendances
         run: npm install
 
+      - name: Installe la police Playfair Display
+        run: |
+          mkdir -p ~/.fonts
+          cp assets/fonts/PlayfairDisplay.ttf ~/.fonts/
+          fc-cache -f ~/.fonts
+
       - name: Prépare le post (image + légende) si créneau dû
         id: prepare
         env:
