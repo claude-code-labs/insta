@@ -1,0 +1,51 @@
+name: Post daily Instagram content
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Installe les dépendances
+        run: npm install
+
+      - name: Prépare le post (image + légende) si créneau dû
+        id: prepare
+        run: node scripts/prepare-daily-post.mjs
+
+      - name: Commit et push l'image générée
+        if: steps.prepare.outputs.due == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add schedule/media/generated data/.pending-post.json
+          git commit -m "chore(content): image générée pour publication"
+          git push
+
+      - name: Publie sur Instagram
+        if: steps.prepare.outputs.due == 'true'
+        env:
+          INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
+          INSTAGRAM_ACCOUNT_ID: ${{ secrets.INSTAGRAM_ACCOUNT_ID }}
+        run: node scripts/publish-daily-post.mjs
+
+      - name: Commit et push l'état
+        if: steps.prepare.outputs.due == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/content-state.json data/.pending-post.json
+          git commit -m "chore(content): mise à jour état de publication"
+          git push
