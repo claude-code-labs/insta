@@ -3,173 +3,230 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dashboard Instagram</title>
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-    rel="stylesheet"
-  />
-  <link
-    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
-    rel="stylesheet"
-  />
+  <title>Aura — Dashboard Instagram</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
-  <header class="hero">
-    <div class="container">
-      <div class="d-flex align-items-center justify-content-between flex-wrap gap-3 py-4">
-        <div class="d-flex align-items-center gap-3">
-          <img id="profile-pic" src="" alt="" class="profile-pic d-none" />
-          <div>
-            <h1 class="h4 mb-0 text-white" id="account-name">Dashboard Instagram</h1>
-            <span class="hero-username" id="account-username">&nbsp;</span>
+  <div class="bg-glow" aria-hidden="true"></div>
+
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <div class="brand">
+        <img id="profile-pic" src="" alt="" class="profile-pic hidden" />
+        <div>
+          <div class="brand-name"><span id="account-name">Aura</span>
+            <span class="mode-pill" id="mode-pill">DÉMO</span>
           </div>
+          <div class="brand-sub" id="account-username">@demo</div>
         </div>
-        <span class="hero-update" id="last-update">
-          <i class="bi bi-arrow-repeat"></i> Chargement…
-        </span>
+      </div>
+      <div class="topbar-actions">
+        <span class="last-update" id="last-update"><i class="bi bi-arrow-repeat"></i> Chargement…</span>
+        <button class="btn-gold" id="login-btn"><i class="bi bi-unlock-fill"></i> Se connecter</button>
+        <button class="btn-ghost hidden" id="logout-btn"><i class="bi bi-lock-fill"></i> Quitter</button>
       </div>
     </div>
   </header>
 
-  <main class="container py-4">
-    <div id="empty-state" class="alert alert-warning d-none" role="alert">
-      Aucune donnée disponible pour le moment. Le premier rapport apparaîtra après la
-      prochaine exécution automatique (ou lance le workflow manuellement).
+  <div class="demo-banner" id="demo-banner">
+    <div class="container">
+      <i class="bi bi-eye"></i>
+      Vous consultez une <strong>démonstration avec des données fictives</strong>.
+      Connectez-vous pour accéder aux données réelles du compte.
     </div>
+  </div>
 
-    <div id="dashboard" class="d-none">
-      <!-- Stat tiles -->
-      <section class="row g-3 mb-4">
-        <div class="col-6 col-md-3">
-          <div class="stat-tile">
-            <div class="stat-icon"><i class="bi bi-people-fill"></i></div>
-            <div class="stat-label">Abonnés</div>
-            <div class="stat-value" id="stat-followers">–</div>
-            <div class="stat-delta" id="stat-followers-delta"></div>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="stat-tile">
-            <div class="stat-icon"><i class="bi bi-grid-3x3-gap-fill"></i></div>
-            <div class="stat-label">Publications</div>
-            <div class="stat-value" id="stat-media">–</div>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="stat-tile">
-            <div class="stat-icon"><i class="bi bi-broadcast"></i></div>
-            <div class="stat-label">Portée (24h)</div>
-            <div class="stat-value" id="stat-reach">–</div>
-          </div>
-        </div>
-        <div class="col-6 col-md-3">
-          <div class="stat-tile">
-            <div class="stat-icon"><i class="bi bi-eye-fill"></i></div>
-            <div class="stat-label">Vues de profil (24h)</div>
-            <div class="stat-value" id="stat-profile-views">–</div>
-          </div>
-        </div>
-      </section>
+  <main class="container">
+    <!-- KPI -->
+    <section class="kpi-grid reveal" aria-label="Chiffres clés">
+      <article class="kpi">
+        <div class="kpi-head"><i class="bi bi-people-fill"></i> Abonnés</div>
+        <div class="kpi-value" id="stat-followers">–</div>
+        <div class="kpi-delta" id="stat-followers-delta"></div>
+      </article>
+      <article class="kpi">
+        <div class="kpi-head"><i class="bi bi-grid-3x3-gap-fill"></i> Publications</div>
+        <div class="kpi-value" id="stat-media">–</div>
+        <div class="kpi-delta" id="stat-media-delta"></div>
+      </article>
+      <article class="kpi">
+        <div class="kpi-head"><i class="bi bi-broadcast"></i> Portée 24 h</div>
+        <div class="kpi-value" id="stat-reach">–</div>
+        <div class="kpi-delta muted">comptes touchés</div>
+      </article>
+      <article class="kpi">
+        <div class="kpi-head"><i class="bi bi-heart-fill"></i> Interactions 24 h</div>
+        <div class="kpi-value" id="stat-interactions">–</div>
+        <div class="kpi-delta muted">likes + commentaires + partages</div>
+      </article>
+      <article class="kpi">
+        <div class="kpi-head"><i class="bi bi-eye-fill"></i> Vues de profil 24 h</div>
+        <div class="kpi-value" id="stat-profile-views">–</div>
+        <div class="kpi-delta muted">visites du profil</div>
+      </article>
+    </section>
 
-      <!-- Followers growth -->
-      <section class="chart-card mb-4">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-          <h2 class="h6 mb-0"><i class="bi bi-graph-up-arrow me-1"></i>Évolution des abonnés</h2>
-        </div>
-        <div class="chart-wrap">
-          <canvas id="chart-followers" role="img" aria-label="Courbe d'évolution du nombre d'abonnés dans le temps"></canvas>
-        </div>
-      </section>
-
-      <div class="row g-3 mb-4">
-        <div class="col-12 col-lg-6">
-          <section class="chart-card h-100">
-            <h2 class="h6 mb-2"><i class="bi bi-bar-chart-fill me-1"></i>Engagement des dernières publications</h2>
-            <div class="chart-wrap">
-              <canvas id="chart-engagement" role="img" aria-label="Barres du taux d'engagement par publication récente"></canvas>
+    <!-- Analyse en temps réel -->
+    <section class="section reveal">
+      <div class="section-head">
+        <h2><i class="bi bi-activity"></i> Analyse des publications</h2>
+        <span class="live-dot" id="live-indicator"><span class="dot"></span> <span id="live-label">temps réel</span></span>
+      </div>
+      <div class="insight-grid">
+        <article class="insight">
+          <div class="insight-label">Croissance (période affichée)</div>
+          <div class="insight-value" id="ins-growth">–</div>
+          <div class="insight-sub" id="ins-growth-sub"></div>
+        </article>
+        <article class="insight">
+          <div class="insight-label">Engagement moyen</div>
+          <div class="insight-value" id="ins-avg-engagement">–</div>
+          <div class="insight-sub">sur les publications récentes</div>
+        </article>
+        <article class="insight">
+          <div class="insight-label">Interactions cumulées</div>
+          <div class="insight-value" id="ins-interactions">–</div>
+          <div class="insight-sub" id="ins-interactions-sub"></div>
+        </article>
+        <article class="insight insight-best" id="ins-best" role="button" tabindex="0">
+          <div class="insight-label"><i class="bi bi-trophy-fill"></i> Meilleure publication</div>
+          <div class="insight-best-body">
+            <img id="ins-best-thumb" src="" alt="" class="hidden" />
+            <div>
+              <div class="insight-value small" id="ins-best-rate">–</div>
+              <div class="insight-sub" id="ins-best-caption"></div>
             </div>
-          </section>
+          </div>
+        </article>
+        <article class="insight">
+          <div class="insight-label">Meilleur créneau</div>
+          <div class="insight-value" id="ins-best-slot">–</div>
+          <div class="insight-sub" id="ins-best-slot-sub"></div>
+        </article>
+        <article class="insight insight-countdown">
+          <div class="insight-label"><i class="bi bi-alarm-fill"></i> Prochaine publication dans</div>
+          <div class="insight-value countdown" id="ins-countdown">–</div>
+          <div class="insight-sub" id="ins-countdown-sub"></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Graphiques -->
+    <section class="section reveal">
+      <div class="card chart-card">
+        <div class="section-head">
+          <h2><i class="bi bi-graph-up-arrow"></i> Évolution des abonnés</h2>
         </div>
-        <div class="col-12 col-lg-6">
-          <section class="chart-card h-100">
-            <h2 class="h6 mb-2"><i class="bi bi-heart-fill me-1"></i>Likes vs commentaires</h2>
-            <div class="chart-wrap">
-              <canvas id="chart-likes-comments" role="img" aria-label="Barres comparant likes et commentaires par publication récente"></canvas>
-            </div>
-          </section>
+        <div class="chart-wrap tall"><canvas id="chart-followers" role="img" aria-label="Courbe d'évolution du nombre d'abonnés dans le temps"></canvas></div>
+      </div>
+      <div class="two-col">
+        <div class="card chart-card">
+          <div class="section-head"><h2><i class="bi bi-bar-chart-fill"></i> Engagement par publication</h2></div>
+          <div class="chart-wrap"><canvas id="chart-engagement" role="img" aria-label="Barres du taux d'engagement par publication récente"></canvas></div>
+        </div>
+        <div class="card chart-card">
+          <div class="section-head"><h2><i class="bi bi-heart-half"></i> Likes et commentaires</h2></div>
+          <div class="chart-wrap"><canvas id="chart-likes-comments" role="img" aria-label="Barres comparant likes et commentaires par publication récente"></canvas></div>
         </div>
       </div>
+    </section>
 
-      <!-- Table view (accessibility) -->
-      <section class="chart-card mb-4">
-        <div class="d-flex align-items-center justify-content-between mb-2">
-          <h2 class="h6 mb-0"><i class="bi bi-table me-1"></i>Détail des publications récentes</h2>
-        </div>
-        <div class="table-responsive">
-          <table class="table table-sm align-middle mb-0" id="media-table">
+    <!-- Galerie des publications -->
+    <section class="section reveal">
+      <div class="section-head">
+        <h2><i class="bi bi-collection-fill"></i> Publications récentes</h2>
+        <button class="btn-ghost small" id="toggle-table"><i class="bi bi-table"></i> Vue tableau</button>
+      </div>
+      <div class="post-grid" id="post-grid"></div>
+      <div class="card hidden" id="table-card">
+        <div class="table-scroll">
+          <table id="media-table">
             <thead>
               <tr>
-                <th scope="col"></th>
                 <th scope="col">Date</th>
                 <th scope="col">Type</th>
                 <th scope="col">Légende</th>
-                <th scope="col" class="text-end"><i class="bi bi-heart-fill"></i></th>
-                <th scope="col" class="text-end"><i class="bi bi-chat-fill"></i></th>
-                <th scope="col" class="text-end">Engagement</th>
-                <th scope="col"></th>
+                <th scope="col" class="num">Likes</th>
+                <th scope="col" class="num">Commentaires</th>
+                <th scope="col" class="num">Engagement</th>
               </tr>
             </thead>
             <tbody></tbody>
           </table>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <div class="row g-3">
-        <div class="col-12 col-lg-6">
-          <section class="chart-card h-100">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <h2 class="h6 mb-0"><i class="bi bi-calendar2-event-fill me-1"></i>Planification automatique</h2>
+    <!-- Plan + messages -->
+    <section class="two-col section reveal">
+      <div class="card">
+        <div class="section-head"><h2><i class="bi bi-calendar2-event-fill"></i> Planification automatique</h2></div>
+        <div id="plan-empty" class="empty-note hidden">Le plan apparaîtra après la première exécution de l'automatisation.</div>
+        <div id="plan-content" class="hidden">
+          <div class="plan-progress">
+            <div class="plan-progress-row">
+              <span id="plan-progress-label"></span>
+              <span class="gold" id="plan-progress-pct"></span>
             </div>
-            <div id="plan-empty" class="text-muted small d-none">
-              Le plan de publication apparaîtra après la première exécution de l'automatisation.
-            </div>
-            <div id="plan-content" class="d-none">
-              <div class="plan-progress mb-3">
-                <div class="d-flex justify-content-between small text-muted mb-1">
-                  <span id="plan-progress-label"></span>
-                  <span id="plan-progress-pct"></span>
-                </div>
-                <div class="progress" style="height: 8px;">
-                  <div class="progress-bar" id="plan-progress-bar" role="progressbar"></div>
-                </div>
-              </div>
-              <div class="plan-block mb-3" id="plan-last"></div>
-              <div class="plan-block mb-3" id="plan-next"></div>
-              <div>
-                <div class="text-muted small mb-1">À venir</div>
-                <ul class="list-unstyled schedule-list" id="plan-upcoming"></ul>
-              </div>
-            </div>
-          </section>
+            <div class="progress-track"><div class="progress-fill" id="plan-progress-bar"></div></div>
+          </div>
+          <div class="plan-block" id="plan-last"></div>
+          <div class="upcoming-label">À venir</div>
+          <ul class="upcoming-list" id="plan-upcoming"></ul>
         </div>
-        <div class="col-12 col-lg-6">
-          <section class="chart-card h-100">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-              <h2 class="h6 mb-0"><i class="bi bi-chat-dots-fill me-1"></i>Messages récents</h2>
-            </div>
-            <div id="messages-empty" class="text-muted small d-none">
-              Aucun message ou fonctionnalité pas encore activée sur le token.
-            </div>
-            <ul class="list-unstyled messages-list" id="messages-list"></ul>
-          </section>
+      </div>
+      <div class="card">
+        <div class="section-head"><h2><i class="bi bi-chat-dots-fill"></i> Messages récents</h2></div>
+        <div id="messages-empty" class="empty-note hidden">Aucun message pour le moment.</div>
+        <ul class="messages-list" id="messages-list"></ul>
+      </div>
+    </section>
+
+    <footer class="footer">Aura · Dashboard privé — les données réelles sont chiffrées (AES-256).</footer>
+  </main>
+
+  <!-- Modal connexion -->
+  <div class="modal-backdrop hidden" id="login-modal">
+    <div class="modal login-modal" role="dialog" aria-modal="true" aria-labelledby="login-title">
+      <button class="modal-close" data-close="login-modal" aria-label="Fermer"><i class="bi bi-x-lg"></i></button>
+      <div class="login-lock"><i class="bi bi-shield-lock-fill"></i></div>
+      <h3 id="login-title">Accès privé</h3>
+      <p class="login-sub">Entre le mot de passe pour déchiffrer les données réelles du compte.</p>
+      <form id="login-form">
+        <input type="password" id="login-password" placeholder="Mot de passe" autocomplete="current-password" required />
+        <div class="login-error hidden" id="login-error"><i class="bi bi-exclamation-triangle-fill"></i> Mot de passe incorrect.</div>
+        <button type="submit" class="btn-gold full" id="login-submit">Déverrouiller</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal détail publication -->
+  <div class="modal-backdrop hidden" id="post-modal">
+    <div class="modal post-modal" role="dialog" aria-modal="true">
+      <button class="modal-close" data-close="post-modal" aria-label="Fermer"><i class="bi bi-x-lg"></i></button>
+      <div class="post-modal-body">
+        <div class="post-modal-media"><img id="pm-image" src="" alt="Visuel de la publication" /></div>
+        <div class="post-modal-info">
+          <div class="pm-badges"><span class="badge-type" id="pm-type"></span><span class="pm-date" id="pm-date"></span></div>
+          <div class="pm-stats">
+            <div class="pm-stat"><i class="bi bi-heart-fill"></i><div><span id="pm-likes">–</span><small>likes</small></div></div>
+            <div class="pm-stat"><i class="bi bi-chat-fill"></i><div><span id="pm-comments">–</span><small>commentaires</small></div></div>
+            <div class="pm-stat"><i class="bi bi-lightning-charge-fill"></i><div><span id="pm-rate">–</span><small>engagement</small></div></div>
+          </div>
+          <div class="pm-compare" id="pm-compare"></div>
+          <div class="pm-caption-label">Légende</div>
+          <p class="pm-caption" id="pm-caption"></p>
         </div>
       </div>
     </div>
-  </main>
+  </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="js/demo-data.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

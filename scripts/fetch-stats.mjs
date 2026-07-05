@@ -1,6 +1,7 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { createGraphClient } from "./graph-client.mjs";
+import { decryptVault } from "./vault.mjs";
 
 const {
   INSTAGRAM_ACCESS_TOKEN,
@@ -88,6 +89,7 @@ async function main() {
       followers_count: account.followers_count,
       follows_count: account.follows_count,
       media_count: account.media_count,
+      profile_picture_url: account.profile_picture_url ?? null,
     },
     insights,
     recent_media: engagementPerPost,
@@ -96,12 +98,19 @@ async function main() {
   const dataDir = path.join(process.cwd(), "data");
   await mkdir(dataDir, { recursive: true });
 
+  // L'historique en clair n'est plus commité : on le récupère depuis le
+  // vault chiffré du repo, avec repli sur le fichier local s'il existe.
   const historyPath = path.join(dataDir, "history.json");
   let history = [];
   try {
     history = JSON.parse(await readFile(historyPath, "utf-8"));
   } catch {
-    history = [];
+    try {
+      const vaultContent = await readFile(path.join(dataDir, "vault.enc"), "utf-8");
+      history = decryptVault(process.env.DASHBOARD_PASSWORD, vaultContent).history ?? [];
+    } catch {
+      history = [];
+    }
   }
 
   history = history.filter((entry) => entry.date !== snapshot.date);

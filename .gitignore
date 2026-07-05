@@ -1,1 +1,7 @@
 node_modules/
+
+# Données du dashboard en clair : seul data/vault.enc (chiffré) est commité
+data/history.json
+data/latest.json
+data/messages.json
+data/content-plan.json

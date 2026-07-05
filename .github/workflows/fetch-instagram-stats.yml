@@ -26,6 +26,7 @@ jobs:
         env:
           INSTAGRAM_ACCESS_TOKEN: ${{ secrets.INSTAGRAM_ACCESS_TOKEN }}
           INSTAGRAM_ACCOUNT_ID: ${{ secrets.INSTAGRAM_ACCOUNT_ID }}
+          DASHBOARD_PASSWORD: ${{ secrets.DASHBOARD_PASSWORD }}
         run: node scripts/fetch-stats.mjs
 
       - name: Récupère les messages Instagram
@@ -34,9 +35,14 @@ jobs:
           INSTAGRAM_ACCOUNT_ID: ${{ secrets.INSTAGRAM_ACCOUNT_ID }}
         run: node scripts/fetch-messages.mjs
 
+      - name: Chiffre les données du dashboard
+        env:
+          DASHBOARD_PASSWORD: ${{ secrets.DASHBOARD_PASSWORD }}
+        run: node scripts/build-vault.mjs
+
       - name: Commit et push des données
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/history.json data/latest.json data/messages.json
+          git add data/vault.enc
           git diff --staged --quiet || (git commit -m "chore(data): mise à jour stats Instagram $(date -u +%Y-%m-%d)" && git pull --rebase --autostash origin main && git push)

@@ -42,11 +42,16 @@ jobs:
           FORCE_POST: ${{ inputs.force }}
         run: node scripts/prepare-daily-post.mjs
 
+      - name: Chiffre le plan de publication dans le vault
+        env:
+          DASHBOARD_PASSWORD: ${{ secrets.DASHBOARD_PASSWORD }}
+        run: node scripts/build-vault.mjs
+
       - name: Commit et push le plan de publication
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/content-plan.json
+          git add data/vault.enc
           git diff --cached --quiet || (git commit -m "chore(content): mise à jour du plan de publication" && git pull --rebase --autostash origin main && git push)
 
       - name: Commit et push l'image générée
