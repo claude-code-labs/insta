@@ -122,10 +122,34 @@
       last_posted: { jour: 62, permalink: null, posted_at: dayTime(0, 12).replace("+0000", "Z") },
       next_slot_at: nextSlot.toISOString(),
       upcoming: [
-        { jour: 63, pilier: "Discipline", phrase: "La discipline commence quand l'envie s'arrête." },
-        { jour: 64, pilier: "Vision", phrase: "Une vision claire transforme l'effort en direction." },
-        { jour: 65, pilier: "Patience", phrase: "Ce qui pousse lentement porte des racines profondes." },
-        { jour: 66, pilier: "Action", phrase: "Commence petit, commence mal, mais commence." },
+        {
+          jour: 63, pilier: "Discipline",
+          phrase: "La discipline commence quand l'envie s'arrête.",
+          hook: "La discipline commence quand l'envie s'arrête.",
+          caption: "La discipline commence quand l'envie s'arrête.\n\nLa motivation va et vient, mais c'est la régularité qui construit des résultats durables.\n\nEnregistre ce rappel.\n\n#discipline #mindset #motivation",
+          caption_overridden: false,
+        },
+        {
+          jour: 64, pilier: "Vision",
+          phrase: "Une vision claire transforme l'effort en direction.",
+          hook: "Une vision claire transforme l'effort en direction.",
+          caption: "Une vision claire transforme l'effort en direction.\n\nAvoir une direction claire aide à tenir bon dans les moments difficiles.\n\nPartage à quelqu'un qui en a besoin.\n\n#vision #objectifs #mindset",
+          caption_overridden: false,
+        },
+        {
+          jour: 65, pilier: "Patience",
+          phrase: "Ce qui pousse lentement porte des racines profondes.",
+          hook: "Ce qui pousse lentement porte des racines profondes.",
+          caption: "Ce qui pousse lentement porte des racines profondes.\n\nLes résultats qui comptent vraiment prennent du temps à se construire.\n\nEnregistre ce rappel.\n\n#patience #perseverance #mindset",
+          caption_overridden: false,
+        },
+        {
+          jour: 66, pilier: "Action",
+          phrase: "Commence petit, commence mal, mais commence.",
+          hook: "Commence petit, commence mal, mais commence.",
+          caption: "Commence petit, commence mal, mais commence.\n\nL'action réduit la peur, alors que l'attente la nourrit.\n\nPartage à quelqu'un qui en a besoin.\n\n#action #motivation #mindset",
+          caption_overridden: false,
+        },
       ],
     },
   };

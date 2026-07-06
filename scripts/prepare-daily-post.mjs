@@ -9,6 +9,8 @@ const EXCEL_PATH = path.join(process.cwd(), "texte.xlsx");
 const STATE_PATH = path.join(process.cwd(), "data", "content-state.json");
 const PENDING_PATH = path.join(process.cwd(), "data", ".pending-post.json");
 const PLAN_PATH = path.join(process.cwd(), "data", "content-plan.json");
+// Légendes personnalisées depuis le dashboard : { "<jour>": { "caption": "..." } }
+const OVERRIDES_PATH = path.join(process.cwd(), "data", "caption-overrides.json");
 const GITHUB_OUTPUT = process.env.GITHUB_OUTPUT;
 
 const SLOT_HOURS = { midi: 12, soir: 19 };
@@ -67,18 +69,53 @@ async function loadState() {
   }
 }
 
+async function loadOverrides() {
+  try {
+    return JSON.parse(await readFile(OVERRIDES_PATH, "utf-8"));
+  } catch {
+    return {};
+  }
+}
+
+function composeCaption(rows, rowIndex, overrides) {
+  const row = rows[rowIndex];
+  const jour = row["Jour"];
+  const override = overrides?.[String(jour)]?.caption;
+  if (override) return { caption: override, overridden: true };
+
+  const phrasePrincipale = String(row["Phrase principale"] ?? "").trim();
+  const cta = String(row["CTA"] ?? "").trim();
+  const pilier = String(row["Pilier"] ?? "").trim();
+  const rowIndexWithinPilier = rows
+    .slice(0, rowIndex)
+    .filter((r) => String(r["Pilier"] ?? "").trim() === pilier).length;
+  const development = developmentForPilier(pilier, rowIndexWithinPilier);
+  const hashtags = hashtagsForPilier(pilier);
+  const caption = [phrasePrincipale, development, cta, hashtags.join(" ")]
+    .filter(Boolean)
+    .join("\n\n");
+  return { caption, overridden: false };
+}
+
 function setOutput(name, value) {
   if (GITHUB_OUTPUT) {
     return writeFile(GITHUB_OUTPUT, `${name}=${value}\n`, { flag: "a" });
   }
 }
 
-async function writePlan(now, state, rows) {
-  const upcoming = rows.slice(state.next_row_index, state.next_row_index + 4).map((r) => ({
-    jour: r["Jour"],
-    pilier: String(r["Pilier"] ?? "").trim(),
-    phrase: String(r["Phrase principale"] ?? "").trim(),
-  }));
+async function writePlan(now, state, rows, overrides) {
+  const upcoming = rows.slice(state.next_row_index, state.next_row_index + 4).map((r, i) => {
+    const rowIndex = state.next_row_index + i;
+    const { caption, overridden } = composeCaption(rows, rowIndex, overrides);
+    return {
+      jour: r["Jour"],
+      pilier: String(r["Pilier"] ?? "").trim(),
+      phrase: String(r["Phrase principale"] ?? "").trim(),
+      hook: String(r["Hook court"] ?? "").trim(),
+      caption,
+      caption_overridden: overridden,
+    };
+  });
 
   const plan = {
     generated_at: now.toISOString(),
@@ -107,11 +144,12 @@ async function main() {
   const slotInfo = parisSlot(now);
 
   const state = await loadState();
+  const overrides = await loadOverrides();
   const workbook = XLSX.read(readFileSync(EXCEL_PATH), { type: "buffer" });
   const sheet = workbook.Sheets["Contenus 200 jours"];
   const rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
-  await writePlan(now, state, rows);
+  await writePlan(now, state, rows, overrides);
 
   if (!forced && !slotInfo) {
     console.log("Aucun créneau dû (avant 12h heure de Paris). Rien à faire.");
@@ -135,18 +173,11 @@ async function main() {
 
   const hookCourt = String(row["Hook court"] ?? "").trim();
   const phrasePrincipale = String(row["Phrase principale"] ?? "").trim();
-  const cta = String(row["CTA"] ?? "").trim();
   const pilier = String(row["Pilier"] ?? "").trim();
   const jour = row["Jour"];
 
-  const rowIndexWithinPilier = rows
-    .slice(0, state.next_row_index)
-    .filter((r) => String(r["Pilier"] ?? "").trim() === pilier).length;
-  const development = developmentForPilier(pilier, rowIndexWithinPilier);
-  const hashtags = hashtagsForPilier(pilier);
-  const caption = [phrasePrincipale, development, cta, hashtags.join(" ")]
-    .filter(Boolean)
-    .join("\n\n");
+  const { caption, overridden } = composeCaption(rows, state.next_row_index, overrides);
+  if (overridden) console.log(`Légende personnalisée depuis le dashboard appliquée pour le jour ${jour}.`);
 
   const imageBuffer = await renderHookImage(hookCourt || phrasePrincipale);
   const mediaDir = path.join(process.cwd(), "schedule", "media", "generated");

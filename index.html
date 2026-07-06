@@ -201,6 +201,8 @@
       <p class="login-sub">Entre le mot de passe pour déchiffrer les données réelles du compte.</p>
       <form id="login-form">
         <input type="password" id="login-password" placeholder="Mot de passe" autocomplete="current-password" required />
+        <input type="password" id="login-token" placeholder="Token GitHub (optionnel — actions à distance)" autocomplete="off" />
+        <p class="login-hint">Le token permet d'actualiser les données et de modifier les publications depuis le site. Il reste dans ton navigateur.</p>
         <div class="login-error hidden" id="login-error"><i class="bi bi-exclamation-triangle-fill"></i> Mot de passe incorrect.</div>
         <button type="submit" class="btn-gold full" id="login-submit">Déverrouiller</button>
       </form>
@@ -223,6 +225,28 @@
           <div class="pm-compare" id="pm-compare"></div>
           <div class="pm-caption-label">Légende</div>
           <p class="pm-caption" id="pm-caption"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal aperçu d'une publication à venir -->
+  <div class="modal-backdrop hidden" id="preview-modal">
+    <div class="modal post-modal" role="dialog" aria-modal="true" aria-labelledby="pv-title">
+      <button class="modal-close" data-close="preview-modal" aria-label="Fermer"><i class="bi bi-x-lg"></i></button>
+      <div class="post-modal-body">
+        <div class="post-modal-media"><canvas id="pv-canvas" width="1080" height="1350"></canvas></div>
+        <div class="post-modal-info">
+          <div class="pm-badges"><span class="badge-type" id="pv-jour"></span><span class="pm-date" id="pv-pilier"></span></div>
+          <h3 id="pv-title" class="pv-title">Aperçu de la publication</h3>
+          <div class="pm-caption-label">Légende <span class="chip hidden" id="pv-overridden">modifiée</span></div>
+          <textarea id="pv-caption" rows="10" spellcheck="false"></textarea>
+          <div class="pv-status hidden" id="pv-status"></div>
+          <div class="pv-actions">
+            <button class="btn-ghost small" data-close="preview-modal">Fermer</button>
+            <button class="btn-gold" id="pv-save"><i class="bi bi-check-lg"></i> Valider la légende</button>
+          </div>
+          <p class="pv-note" id="pv-note">La légende validée sera utilisée telle quelle lors de la publication automatique de ce jour.</p>
         </div>
       </div>
     </div>

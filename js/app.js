@@ -3,7 +3,9 @@
    de data/vault.enc (AES-256-GCM, clé dérivée du mot de passe via PBKDF2). */
 
 const PW_STORAGE_KEY = "aura_pw";
-const state = { mode: "demo", bundle: null, charts: {}, countdownTimer: null, refreshTimer: null };
+const GH_TOKEN_STORAGE_KEY = "aura_gh_token";
+const GH_REPO = "claude-code-labs/insta";
+const state = { mode: "demo", bundle: null, charts: {}, countdownTimer: null, refreshTimer: null, pollTimer: null };
 
 /* ---------- Utilitaires ---------- */
 const $ = (id) => document.getElementById(id);
@@ -40,6 +42,29 @@ async function fetchVaultText() {
   if (!res.ok) throw new Error("vault indisponible");
   return res.text();
 }
+
+/* ---------- API GitHub (actions à distance : refresh, légendes) ---------- */
+const ghToken = () => sessionStorage.getItem(GH_TOKEN_STORAGE_KEY);
+
+function ghFetch(apiPath, options = {}) {
+  return fetch(`https://api.github.com/repos/${GH_REPO}${apiPath}`, {
+    ...options,
+    headers: {
+      Authorization: `Bearer ${ghToken()}`,
+      Accept: "application/vnd.github+json",
+      ...(options.body ? { "Content-Type": "application/json" } : {}),
+    },
+  });
+}
+
+const b64ToUtf8 = (b64) =>
+  new TextDecoder().decode(Uint8Array.from(atob(b64.replace(/\s/g, "")), (c) => c.charCodeAt(0)));
+const utf8ToB64 = (str) => {
+  const bytes = new TextEncoder().encode(str);
+  let bin = "";
+  for (const b of bytes) bin += String.fromCharCode(b);
+  return btoa(bin);
+};
 
 /* ---------- Graphiques ---------- */
 function destroyCharts() {
@@ -347,14 +372,146 @@ function renderPlan(plan) {
   list.innerHTML = "";
   for (const item of plan.upcoming ?? []) {
     const li = document.createElement("li");
+    li.classList.add("upcoming-clickable");
+    li.tabIndex = 0;
+    li.setAttribute("role", "button");
+    li.title = "Voir l'aperçu de cette publication";
     li.innerHTML = `
       <div>
         <div class="upcoming-phrase">${escapeHtml(item.phrase)}</div>
-        <div class="upcoming-pilier">${escapeHtml(item.pilier)}</div>
+        <div class="upcoming-pilier">${escapeHtml(item.pilier)}${item.caption_overridden ? ' · <span class="gold">légende modifiée</span>' : ""}</div>
       </div>
-      <span class="chip">Jour ${escapeHtml(String(item.jour))}</span>`;
+      <span class="chip">Jour ${escapeHtml(String(item.jour))} <i class="bi bi-eye"></i></span>`;
+    const open = () => openPreviewModal(item);
+    li.addEventListener("click", open);
+    li.addEventListener("keydown", (e) => { if (e.key === "Enter") open(); });
     list.appendChild(li);
   }
+}
+
+/* ---------- Aperçu + édition d'une publication à venir ---------- */
+// Reproduit le rendu serveur (scripts/render-hook-image.mjs) : texte doré
+// Playfair Display centré sur la bande 24 %–52 % du template hook/hook.png.
+function wrapPreviewText(text, maxCharsPerLine) {
+  const words = text.split(/\s+/);
+  const lines = [];
+  let current = "";
+  for (const word of words) {
+    const candidate = current ? `${current} ${word}` : word;
+    if (candidate.length > maxCharsPerLine && current) {
+      lines.push(current);
+      current = word;
+    } else {
+      current = candidate;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+function previewSizing(text) {
+  if (text.length <= 40) return { fontSize: 58, maxCharsPerLine: 20 };
+  if (text.length <= 80) return { fontSize: 46, maxCharsPerLine: 26 };
+  return { fontSize: 38, maxCharsPerLine: 32 };
+}
+
+async function drawPreviewImage(text) {
+  const canvas = $("pv-canvas");
+  const ctx = canvas.getContext("2d");
+  const img = new Image();
+  img.src = "hook/hook.png";
+  await img.decode();
+  canvas.width = img.naturalWidth;
+  canvas.height = img.naturalHeight;
+  ctx.drawImage(img, 0, 0);
+
+  await document.fonts.load('700 58px "Playfair Display"');
+  const { fontSize, maxCharsPerLine } = previewSizing(text);
+  const lines = wrapPreviewText(text, maxCharsPerLine);
+  const lineHeight = fontSize * 1.3;
+  const bandCenter = (canvas.height * 0.24 + canvas.height * 0.52) / 2;
+  const startY = bandCenter - (lines.length * lineHeight) / 2 + fontSize * 0.8;
+
+  ctx.font = `700 ${fontSize}px "Playfair Display", Georgia, serif`;
+  ctx.fillStyle = "#f0c862";
+  ctx.textAlign = "center";
+  ctx.shadowColor = "rgba(0, 0, 0, 0.6)";
+  ctx.shadowOffsetY = 4;
+  ctx.shadowBlur = 16;
+  lines.forEach((line, i) => ctx.fillText(line, canvas.width / 2, startY + i * lineHeight));
+}
+
+function setPreviewStatus(text, kind) {
+  const el = $("pv-status");
+  el.textContent = text ?? "";
+  el.className = `pv-status${text ? "" : " hidden"}${kind ? " " + kind : ""}`;
+}
+
+async function saveCaptionOverride(jour, caption) {
+  const filePath = "data/caption-overrides.json";
+  let sha;
+  let overrides = {};
+  const res = await ghFetch(`/contents/${filePath}?ref=main`);
+  if (res.ok) {
+    const json = await res.json();
+    sha = json.sha;
+    overrides = JSON.parse(b64ToUtf8(json.content));
+  } else if (res.status !== 404) {
+    throw new Error(`lecture impossible (${res.status})`);
+  }
+  overrides[String(jour)] = { caption, updated_at: new Date().toISOString() };
+  const put = await ghFetch(`/contents/${filePath}`, {
+    method: "PUT",
+    body: JSON.stringify({
+      message: `chore(content): légende personnalisée jour ${jour}`,
+      content: utf8ToB64(JSON.stringify(overrides, null, 2) + "\n"),
+      branch: "main",
+      ...(sha ? { sha } : {}),
+    }),
+  });
+  if (!put.ok) throw new Error(`enregistrement refusé (${put.status})`);
+}
+
+function openPreviewModal(item) {
+  $("pv-jour").textContent = `Jour ${item.jour}`;
+  $("pv-pilier").textContent = item.pilier || "";
+  $("pv-caption").value = item.caption || item.phrase || "";
+  $("pv-overridden").classList.toggle("hidden", !item.caption_overridden);
+  setPreviewStatus(null);
+
+  const saveBtn = $("pv-save");
+  const canSave = state.mode === "live" && !!ghToken();
+  saveBtn.disabled = !canSave;
+  $("pv-note").textContent = canSave
+    ? "La légende validée sera utilisée telle quelle lors de la publication automatique de ce jour."
+    : state.mode === "live"
+      ? "Ajoute un token GitHub à la connexion pour pouvoir modifier la légende depuis le site."
+      : "Mode démo : la modification est désactivée.";
+
+  saveBtn.onclick = async () => {
+    saveBtn.disabled = true;
+    setPreviewStatus("Enregistrement…");
+    try {
+      const caption = $("pv-caption").value.trim();
+      await saveCaptionOverride(item.jour, caption);
+      item.caption = caption;
+      item.caption_overridden = true;
+      $("pv-overridden").classList.remove("hidden");
+      renderPlan(state.bundle?.plan);
+      setPreviewStatus("Légende enregistrée — elle sera utilisée à la publication.", "ok");
+    } catch (err) {
+      setPreviewStatus(`Échec : ${err.message}`, "error");
+    } finally {
+      saveBtn.disabled = !canSave;
+    }
+  };
+
+  openModal("preview-modal");
+  drawPreviewImage(item.hook || item.phrase || "").catch(() => {
+    const ctx = $("pv-canvas").getContext("2d");
+    ctx.fillStyle = "#1d1810";
+    ctx.fillRect(0, 0, $("pv-canvas").width, $("pv-canvas").height);
+  });
 }
 
 // "Voir" la dernière publication planifiée : tout se passe dans le dashboard.
@@ -462,7 +619,9 @@ function startAutoRefresh(password) {
 
 function logout() {
   sessionStorage.removeItem(PW_STORAGE_KEY);
+  sessionStorage.removeItem(GH_TOKEN_STORAGE_KEY);
   clearInterval(state.refreshTimer);
+  clearInterval(state.pollTimer);
   renderBundle(window.DEMO_BUNDLE, "demo");
 }
 
@@ -482,6 +641,7 @@ document.addEventListener("keydown", (e) => {
 $("login-btn").addEventListener("click", () => {
   $("login-error").classList.add("hidden");
   $("login-password").value = "";
+  $("login-token").value = "";
   openModal("login-modal");
   setTimeout(() => $("login-password").focus(), 60);
 });
@@ -494,6 +654,8 @@ $("login-form").addEventListener("submit", async (e) => {
   btn.textContent = "Déchiffrement…";
   try {
     await tryLive($("login-password").value);
+    const token = $("login-token").value.trim();
+    if (token) sessionStorage.setItem(GH_TOKEN_STORAGE_KEY, token);
     closeModal("login-modal");
   } catch {
     const modal = document.querySelector(".login-modal");
@@ -507,25 +669,61 @@ $("login-form").addEventListener("submit", async (e) => {
   }
 });
 
+function setRefreshStatus(text) {
+  $("last-update").innerHTML = text
+    ? `<i class="bi bi-arrow-repeat"></i> ${text}`
+    : $("last-update").innerHTML;
+}
+
+// Relance le workflow GitHub qui récupère stats + messages, puis attend que le
+// nouveau vault soit publié (commit + déploiement Pages : compter 1 à 3 min).
+async function realRefresh(password) {
+  const res = await ghFetch("/actions/workflows/fetch-instagram-stats.yml/dispatches", {
+    method: "POST",
+    body: JSON.stringify({ ref: "main" }),
+  });
+  if (res.status !== 204) throw new Error(`dispatch refusé (${res.status})`);
+
+  setRefreshStatus("Actualisation en cours… (1 à 3 min)");
+  const before = state.bundle?.built_at;
+  clearInterval(state.pollTimer);
+  const startedAt = Date.now();
+  state.pollTimer = setInterval(async () => {
+    if (Date.now() - startedAt > 6 * 60 * 1000) {
+      clearInterval(state.pollTimer);
+      setRefreshStatus("Les nouvelles données arriveront d'ici quelques minutes.");
+      return;
+    }
+    try {
+      const bundle = await decryptVault(password, await fetchVaultText());
+      if (bundle.built_at !== before) {
+        clearInterval(state.pollTimer);
+        renderBundle(bundle, "live");
+      }
+    } catch { /* déploiement en cours : on réessaie */ }
+  }, 20 * 1000);
+}
+
 $("refresh-btn").addEventListener("click", async () => {
   const btn = $("refresh-btn");
   const icon = btn.querySelector("i");
   btn.disabled = true;
   icon.classList.add("spin");
   try {
-    if (state.mode === "live") {
-      const password = sessionStorage.getItem(PW_STORAGE_KEY);
-      if (password) {
-        const bundle = await decryptVault(password, await fetchVaultText());
-        renderBundle(bundle, "live");
-      }
+    const password = sessionStorage.getItem(PW_STORAGE_KEY);
+    if (state.mode === "live" && password && ghToken()) {
+      await realRefresh(password);
+    } else if (state.mode === "live" && password) {
+      // Sans token GitHub : on recharge simplement le dernier vault publié.
+      const bundle = await decryptVault(password, await fetchVaultText());
+      renderBundle(bundle, "live");
+      setRefreshStatus("Rechargé — ajoute un token GitHub à la connexion pour une actualisation complète.");
     } else {
       renderBundle(window.DEMO_BUNDLE, "demo");
     }
-  } catch { /* réseau indisponible : on garde l'affichage actuel */ }
+  } catch { setRefreshStatus("Actualisation impossible (réseau ou token)."); }
   finally {
-    // petite latence pour que la rotation soit perceptible même si tout est instantané
-    setTimeout(() => { icon.classList.remove("spin"); btn.disabled = false; }, 500);
+    setTimeout(() => { icon.classList.remove("spin"); btn.disabled = false; }, 800);
   }
 });
 
