@@ -44,7 +44,7 @@ async function fetchVaultText() {
 }
 
 /* ---------- API GitHub (actions à distance : refresh, légendes) ---------- */
-const ghToken = () => sessionStorage.getItem(GH_TOKEN_STORAGE_KEY);
+const ghToken = () => localStorage.getItem(GH_TOKEN_STORAGE_KEY);
 
 function ghFetch(apiPath, options = {}) {
   return fetch(`https://api.github.com/repos/${GH_REPO}${apiPath}`, {
@@ -603,7 +603,7 @@ async function tryLive(password) {
   const vaultText = await fetchVaultText();
   const bundle = await decryptVault(password, vaultText);
   renderBundle(bundle, "live");
-  sessionStorage.setItem(PW_STORAGE_KEY, password);
+  localStorage.setItem(PW_STORAGE_KEY, password);
   startAutoRefresh(password);
 }
 
@@ -618,8 +618,8 @@ function startAutoRefresh(password) {
 }
 
 function logout() {
-  sessionStorage.removeItem(PW_STORAGE_KEY);
-  sessionStorage.removeItem(GH_TOKEN_STORAGE_KEY);
+  localStorage.removeItem(PW_STORAGE_KEY);
+  localStorage.removeItem(GH_TOKEN_STORAGE_KEY);
   clearInterval(state.refreshTimer);
   clearInterval(state.pollTimer);
   renderBundle(window.DEMO_BUNDLE, "demo");
@@ -655,7 +655,7 @@ $("login-form").addEventListener("submit", async (e) => {
   try {
     await tryLive($("login-password").value);
     const token = $("login-token").value.trim();
-    if (token) sessionStorage.setItem(GH_TOKEN_STORAGE_KEY, token);
+    if (token) localStorage.setItem(GH_TOKEN_STORAGE_KEY, token);
     closeModal("login-modal");
   } catch {
     const modal = document.querySelector(".login-modal");
@@ -710,7 +710,7 @@ $("refresh-btn").addEventListener("click", async () => {
   btn.disabled = true;
   icon.classList.add("spin");
   try {
-    const password = sessionStorage.getItem(PW_STORAGE_KEY);
+    const password = localStorage.getItem(PW_STORAGE_KEY);
     if (state.mode === "live" && password && ghToken()) {
       await realRefresh(password);
     } else if (state.mode === "live" && password) {
@@ -738,8 +738,8 @@ $("toggle-table").addEventListener("click", () => {
 /* ---------- Démarrage ---------- */
 (async function init() {
   renderBundle(window.DEMO_BUNDLE, "demo");
-  const saved = sessionStorage.getItem(PW_STORAGE_KEY);
+  const saved = localStorage.getItem(PW_STORAGE_KEY);
   if (saved) {
-    try { await tryLive(saved); } catch { sessionStorage.removeItem(PW_STORAGE_KEY); }
+    try { await tryLive(saved); } catch { localStorage.removeItem(PW_STORAGE_KEY); }
   }
 })();
