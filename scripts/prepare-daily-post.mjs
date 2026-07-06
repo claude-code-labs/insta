@@ -38,11 +38,14 @@ function parisInstant(y, mo, d, h, mi) {
   return new Date(guess);
 }
 
+// Rattrapage : un créneau est dû dès que son heure est passée aujourd'hui,
+// même si le run part en retard. On retient le créneau dû le plus récent ;
+// l'anti-doublon (slot_key déjà traité) est vérifié par l'appelant.
 function parisSlot(now) {
-  const { y, mo, d, h, mi } = parisPartsOf(now);
+  const { y, mo, d, h } = parisPartsOf(now);
   const dateKey = `${y}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-  if (h === SLOT_HOURS.midi && mi < 15) return { slot: "midi", dateKey };
-  if (h === SLOT_HOURS.soir && mi < 15) return { slot: "soir", dateKey };
+  if (h >= SLOT_HOURS.soir) return { slot: "soir", dateKey };
+  if (h >= SLOT_HOURS.midi) return { slot: "midi", dateKey };
   return null;
 }
 
@@ -111,7 +114,7 @@ async function main() {
   await writePlan(now, state, rows);
 
   if (!forced && !slotInfo) {
-    console.log("Hors créneau (12h ou 19h heure de Paris). Rien à faire.");
+    console.log("Aucun créneau dû (avant 12h heure de Paris). Rien à faire.");
     await setOutput("due", "false");
     return;
   }

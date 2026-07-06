@@ -507,6 +507,28 @@ $("login-form").addEventListener("submit", async (e) => {
   }
 });
 
+$("refresh-btn").addEventListener("click", async () => {
+  const btn = $("refresh-btn");
+  const icon = btn.querySelector("i");
+  btn.disabled = true;
+  icon.classList.add("spin");
+  try {
+    if (state.mode === "live") {
+      const password = sessionStorage.getItem(PW_STORAGE_KEY);
+      if (password) {
+        const bundle = await decryptVault(password, await fetchVaultText());
+        renderBundle(bundle, "live");
+      }
+    } else {
+      renderBundle(window.DEMO_BUNDLE, "demo");
+    }
+  } catch { /* réseau indisponible : on garde l'affichage actuel */ }
+  finally {
+    // petite latence pour que la rotation soit perceptible même si tout est instantané
+    setTimeout(() => { icon.classList.remove("spin"); btn.disabled = false; }, 500);
+  }
+});
+
 $("toggle-table").addEventListener("click", () => {
   const card = $("table-card");
   const hidden = card.classList.toggle("hidden");

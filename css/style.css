@@ -87,6 +87,9 @@ h1, h2, h3 { font-family: "Playfair Display", Georgia, serif; letter-spacing: 0.
 }
 .btn-ghost:hover { color: var(--gold-strong); border-color: var(--gold); }
 .btn-ghost.small { padding: 6px 14px; font-size: 0.78rem; }
+.btn-ghost:disabled { opacity: 0.6; cursor: default; }
+@keyframes spin { to { transform: rotate(360deg); } }
+#refresh-btn .spin { display: inline-block; animation: spin 0.8s linear infinite; }
 
 /* ---------- Bandeau démo ---------- */
 .demo-banner {
@@ -167,7 +170,13 @@ main { padding: 28px 20px 60px; }
 /* ---------- Galerie de posts ---------- */
 .post-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 @media (max-width: 1000px) { .post-grid { grid-template-columns: repeat(3, 1fr); } }
-@media (max-width: 700px) { .post-grid { grid-template-columns: repeat(2, 1fr); } }
+/* Mobile : 3 colonnes serrées, effet grille Instagram. Badges masqués pour
+   garder les vignettes lisibles ; le détail reste accessible au tap (modal). */
+@media (max-width: 700px) {
+  .post-grid { grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .post-card { border-radius: 8px; }
+  .post-card .badge-type, .post-card .po-rate { display: none; }
+}
 .post-card {
   position: relative; border-radius: 16px; overflow: hidden; cursor: pointer;
   border: 1px solid var(--border); aspect-ratio: 1 / 1; background: var(--surface-2);

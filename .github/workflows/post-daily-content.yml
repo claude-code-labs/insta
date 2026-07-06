@@ -2,7 +2,10 @@ name: Post daily Instagram content
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    # 12h et 19h heure de Paris : 10h/17h UTC en été (UTC+2), 11h/18h UTC en hiver (UTC+1).
+    # Le script filtre lui-même selon l'heure de Paris ; les runs hors créneau sortent sans rien faire.
+    # Le passage de :30 est un filet de secours si GitHub retarde ou saute le run de :00.
+    - cron: "0,30 10,11,17,18 * * *"
   workflow_dispatch:
     inputs:
       force:
